@@ -13,6 +13,9 @@ public:
     {
         js_sub_ = this->create_subscription<sensor_msgs::msg::JointState>(
             "joint_states", 10, std::bind(&MirobotWriteNode::joint_state_callback, this, std::placeholders::_1));
+
+        //TODO: home position reset
+
     }
 
 private:
