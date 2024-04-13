@@ -38,15 +38,6 @@ private:
 
         _serial.write(Gcode.c_str());
         result.data = _serial.read(_serial.available());
-
-        // const auto& joint_names = msg->name;
-        // const auto& joint_positions = msg->position;
-
-        // RCLCPP_INFO(this->get_logger(), "Received joint states:");
-        // for (size_t i = 0; i < joint_names.size(); ++i)
-        // {
-        //     RCLCPP_INFO(this->get_logger(), "%s: %f", joint_names[i].c_str(), joint_positions[i]);
-        // }
     }
 
     rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr js_sub_;
@@ -58,11 +49,17 @@ int main(int argc, char** argv)
     rclcpp::init(argc, argv);
 
     auto mirobot_gcode_write_node = std::make_shared<MirobotWriteNode>();
+    
+    mirobot_gcode_write_node->declare_parameter("port_name", "/dev/ttyUSB0");
+    mirobot_gcode_write_node->declare_parameter("baud_rate", 115200);
+
+    auto port_name = mirobot_gcode_write_node->get_parameter("port_name").as_string();
+    auto baud_rate = mirobot_gcode_write_node->get_parameter("baud_rate").as_int();
 
 	try{
         //TODO: port name into launch param
-		_serial.setPort("/dev/ttyUSB0");
-		_serial.setBaudrate(115200);
+		_serial.setPort(port_name);
+		_serial.setBaudrate(baud_rate);
 
 		serial::Timeout to = serial::Timeout::simpleTimeout(1000);
 		
