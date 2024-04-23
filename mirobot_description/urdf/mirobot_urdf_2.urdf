@@ -2,8 +2,14 @@
 <!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<!-- world link and joint added for USD creation -->
 <robot
   name="mirobot" xmlns:xacro="http://ros.org/wiki/xacro">
+  <link name="world"/>
+  <joint name="joint_w" type="fixed">
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
   <link
     name="base_link">
     <inertial>
