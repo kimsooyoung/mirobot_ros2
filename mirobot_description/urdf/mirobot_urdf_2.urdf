@@ -398,7 +398,23 @@
       effort="200"
       velocity="200" />
   </joint>
-  
+
+  <link name="ee_link">
+    <collision>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+    </collision>
+  </link>
+
+  <joint name="ee_fixed_joint" type="fixed">
+    <parent link="Link6" />
+    <child link = "ee_link" />
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 1.5708 0.0" />
+  </joint>
+
+
   <!-- Transmissions for ROS Control -->
   <xacro:macro name="transmission_block" params="joint_name">
     <transmission name="tran1">
