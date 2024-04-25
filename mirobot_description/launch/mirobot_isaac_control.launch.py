@@ -17,7 +17,7 @@ def generate_launch_description():
     pkg_path = os.path.join(get_package_share_directory("mirobot_description"))
     rviz_config_file = os.path.join(pkg_path, "rviz", "description.rviz")
     urdf_file = os.path.join(pkg_path, "urdf", "mirobot_urdf_2.urdf")
-    serial_config = os.path.join(pkg_path, "config", "serial_params.yaml")
+    serial_config = os.path.join(pkg_path, "config", "isaac_params.yaml")
 
     joint_state_publisher_gui = Node(
         package="joint_state_publisher_gui",
@@ -34,14 +34,6 @@ def generate_launch_description():
         arguments=[urdf_file],
     )
 
-    # serial_node = Node(
-    #     package="mirobot_description",
-    #     executable="mirobot_gcode_writer",
-    #     name="mirobot_write_node",
-    #     output="screen",
-    #     arguments=["-d", serial_config],
-    # )
-
     # Launch RViz
     rviz2 = Node(
         package="rviz2",
@@ -50,13 +42,15 @@ def generate_launch_description():
         output="screen",
         arguments=["-d", rviz_config_file],
     )
+    
+    serial_node = Node(
+        package="mirobot_description",
+        executable="mirobot_gcode_writer_isaac",
+        name="mirobot_write_node",
+        output="screen",
+        arguments=["-d", serial_config],
+    )
 
     return LaunchDescription([
-        TimerAction(
-            period=3.0,
-            actions=[rviz2]
-        ),
-        robot_state_publisher,
-        joint_state_publisher_gui,
-        # serial_node,
+        serial_node
     ])

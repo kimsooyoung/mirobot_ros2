@@ -11,7 +11,7 @@ public:
     MirobotWriteNode()
         : Node("mirobot_write_node")
     {
-        this->declare_parameter("joint_states_topic_name", "joint_states");
+        this->declare_parameter("joint_states_topic_name", "/issac/joint_states");
         joint_states_topic_name = this->get_parameter("joint_states_topic_name").as_string();
         RCLCPP_INFO(this->get_logger(), "Joint States Topic Name : %s", joint_states_topic_name.c_str());
 

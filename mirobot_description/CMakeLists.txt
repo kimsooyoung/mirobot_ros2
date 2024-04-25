@@ -31,9 +31,14 @@ endif()
 add_executable(mirobot_gcode_writer src/mirobot_gcode_writer.cpp)
 ament_target_dependencies(mirobot_gcode_writer rclcpp sensor_msgs std_msgs serial)
 
+add_executable(mirobot_gcode_writer_isaac src/mirobot_gcode_writer_isaac.cpp)
+ament_target_dependencies(mirobot_gcode_writer_isaac rclcpp sensor_msgs std_msgs serial)
+
+
 install(
   TARGETS
     mirobot_gcode_writer
+    mirobot_gcode_writer_isaac
   DESTINATION 
     lib/${PROJECT_NAME}
 )
