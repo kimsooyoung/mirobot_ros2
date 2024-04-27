@@ -5,6 +5,11 @@
 
 serial::Serial _serial;				// serial object
 
+double truncateDecimal(double value, int precision) {
+    double factor = pow(10.0, precision);
+    return floor(value * factor) / factor;
+}
+
 class MirobotWriteNode : public rclcpp::Node
 {
 public:
@@ -12,6 +17,8 @@ public:
         : Node("mirobot_write_node")
     {
         this->declare_parameter("joint_states_topic_name", "/issac/joint_states");
+        // this->declare_parameter("joint_states_topic_name", "/issac/joint_command");
+        
         joint_states_topic_name = this->get_parameter("joint_states_topic_name").as_string();
         RCLCPP_INFO(this->get_logger(), "Joint States Topic Name : %s", joint_states_topic_name.c_str());
 
@@ -42,15 +49,23 @@ private:
         char angle4[10];
         char angle5[10];
 
-        sprintf(angle0, "%.2f", msg->position[0]*57.296);
-        sprintf(angle1, "%.2f", msg->position[1]*57.296);
-        sprintf(angle2, "%.2f", msg->position[2]*57.296);
-        sprintf(angle3, "%.2f", msg->position[3]*57.296);
-        sprintf(angle4, "%.2f", msg->position[4]*57.296);
-        sprintf(angle5, "%.2f", msg->position[5]*57.296);
+        auto position0 = truncateDecimal(msg->position[0]*57.296, 2);
+        auto position1 = truncateDecimal(msg->position[1]*57.296, 2);
+        auto position2 = truncateDecimal(msg->position[2]*57.296, 2);
+        auto position3 = truncateDecimal(msg->position[3]*57.296, 2);
+        auto position4 = truncateDecimal(msg->position[4]*57.296, 2);
+        auto position5 = truncateDecimal(msg->position[5]*57.296, 2);
+
+        sprintf(angle0, "%.2f", position0);
+        sprintf(angle1, "%.2f", position1);
+        sprintf(angle2, "%.2f", position2);
+        sprintf(angle3, "%.2f", position3);
+        sprintf(angle4, "%.2f", position4);
+        sprintf(angle5, "%.2f", position5);
         Gcode = (std::string)"M50 G0 X" + angle0 + " Y" + angle1 + " Z" + angle2 + " A" + angle3 + "B" + angle4 + "C" + angle5 + " F3000" + "\r\n";
         
         RCLCPP_INFO(this->get_logger(), "%s", Gcode.c_str());
+        RCLCPP_INFO(this->get_logger(), "position0 : %f / position1 : %f / position2 : %f", position0, position1, position2);
 
         _serial.write(Gcode.c_str());
         result.data = _serial.read(_serial.available());
