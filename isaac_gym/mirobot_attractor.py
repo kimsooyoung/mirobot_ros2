@@ -81,7 +81,7 @@ mirobot_asset = gym.load_asset(
 
 
 # Set up the env grid
-num_envs = 5
+num_envs = 6
 spacing = 0.3
 env_lower = gymapi.Vec3(-spacing, 0.0, -spacing)
 env_upper = gymapi.Vec3(spacing, spacing, spacing)
@@ -90,7 +90,7 @@ env_upper = gymapi.Vec3(spacing, spacing, spacing)
 envs = []
 franka_handles = []
 # link name 
-franka_hand = "Link6"
+franka_hand = "ee_link"
 
 # Attractor setup
 attractor_handles = []
@@ -122,38 +122,41 @@ for i in range(num_envs):
 
     # add franka
     franka_handle = gym.create_actor(env, mirobot_asset, pose, "franka", i, 1)
-    # body_dict = gym.get_actor_rigid_body_dict(env, franka_handle)
-    # props = gym.get_actor_rigid_body_states(env, franka_handle, gymapi.STATE_POS)
-    # hand_handle = body = gym.find_actor_rigid_body_handle(env, franka_handle, franka_hand)
+    body_dict = gym.get_actor_rigid_body_dict(env, franka_handle)
+    props = gym.get_actor_rigid_body_states(env, franka_handle, gymapi.STATE_POS)
+    hand_handle = body = gym.find_actor_rigid_body_handle(env, franka_handle, franka_hand)
 
-    # # Initialize the attractor
-    # attractor_properties.target = props['pose'][:][body_dict[franka_hand]]
-    # attractor_properties.target.p.y -= 0.01
-    # attractor_properties.target.p.z = 0.01
-    # attractor_properties.rigid_handle = hand_handle
+    # Initialize the attractor
+    attractor_properties.target = props['pose'][:][body_dict[franka_hand]]
+    
+    # offset from Link6
+    # attractor_properties.target.p.x = 0.0
+    attractor_properties.target.p.y = 0.2
+    # attractor_properties.target.p.z = 0.0
+    attractor_properties.rigid_handle = hand_handle
 
-    # # Draw axes and sphere at attractor location
-    # gymutil.draw_lines(axes_geom, gym, viewer, env, attractor_properties.target)
-    # gymutil.draw_lines(sphere_geom, gym, viewer, env, attractor_properties.target)
+    # Draw axes and sphere at attractor location
+    gymutil.draw_lines(axes_geom, gym, viewer, env, attractor_properties.target)
+    gymutil.draw_lines(sphere_geom, gym, viewer, env, attractor_properties.target)
 
-    # franka_handles.append(franka_handle)
-    # attractor_handle = gym.create_rigid_body_attractor(env, attractor_properties)
-    # attractor_handles.append(attractor_handle)
+    franka_handles.append(franka_handle)
+    attractor_handle = gym.create_rigid_body_attractor(env, attractor_properties)
+    attractor_handles.append(attractor_handle)
 
-# # get joint limits and ranges for Franka
-# franka_dof_props = gym.get_actor_dof_properties(envs[0], franka_handles[0])
-# franka_lower_limits = franka_dof_props['lower']
-# franka_upper_limits = franka_dof_props['upper']
-# franka_ranges = franka_upper_limits - franka_lower_limits
-# franka_mids = 0.5 * (franka_upper_limits + franka_lower_limits)
-# franka_num_dofs = len(franka_dof_props)
+# get joint limits and ranges for Franka
+franka_dof_props = gym.get_actor_dof_properties(envs[0], franka_handles[0])
+franka_lower_limits = franka_dof_props['lower']
+franka_upper_limits = franka_dof_props['upper']
+franka_ranges = franka_upper_limits - franka_lower_limits
+franka_mids = 0.5 * (franka_upper_limits + franka_lower_limits)
+franka_num_dofs = len(franka_dof_props)
 
-# # override default stiffness and damping values
-# franka_dof_props['stiffness'].fill(1000.0)
-# franka_dof_props['damping'].fill(1000.0)
+# override default stiffness and damping values
+franka_dof_props['stiffness'].fill(1000.0)
+franka_dof_props['damping'].fill(1000.0)
 
-# # Give a desired pose for first 2 robot joints to improve stability
-# franka_dof_props["driveMode"][0:2] = gymapi.DOF_MODE_POS
+# Give a desired pose for first 2 robot joints to improve stability
+franka_dof_props["driveMode"][0:2] = gymapi.DOF_MODE_POS
 
 # franka_dof_props["driveMode"][7:] = gymapi.DOF_MODE_POS
 # franka_dof_props['stiffness'][7:] = 1e10
@@ -162,16 +165,15 @@ for i in range(num_envs):
 # for i in range(num_envs):
 #     gym.set_actor_dof_properties(envs[i], franka_handles[i], franka_dof_props)
 
-
 def update_franka(t):
     gym.clear_lines(viewer)
     for i in range(num_envs):
         # Update attractor target from current franka state
         attractor_properties = gym.get_attractor_properties(envs[i], attractor_handles[i])
         pose = attractor_properties.target
-        pose.p.x = 0.05 * math.sin(1.5 * t - math.pi * float(i) / num_envs)
-        pose.p.y = 0.07 + 0.01 * math.cos(2.5 * t - math.pi * float(i) / num_envs)
-        pose.p.z = 0.02 * math.cos(1.5 * t - math.pi * float(i) / num_envs)
+        # pose.p.x = 0.1 * math.sin(1.5 * t - math.pi * float(i) / num_envs)
+        pose.p.y = 0.2 + 0.05 * math.cos(2.5 * t - math.pi * float(i) / num_envs)
+        pose.p.z = 0.05 * math.cos(1.5 * t - math.pi * float(i) / num_envs)
 
         gym.set_attractor_target(envs[i], attractor_handles[i], pose)
 
@@ -180,15 +182,15 @@ def update_franka(t):
         gymutil.draw_lines(sphere_geom, gym, viewer, envs[i], pose)
 
 
-# for i in range(num_envs):
-#     # Set updated stiffness and damping properties
-#     gym.set_actor_dof_properties(envs[i], franka_handles[i], franka_dof_props)
+for i in range(num_envs):
+    # Set updated stiffness and damping properties
+    gym.set_actor_dof_properties(envs[i], franka_handles[i], franka_dof_props)
 
-#     # Set franka pose so that each joint is in the middle of its actuation range
-#     franka_dof_states = gym.get_actor_dof_states(envs[i], franka_handles[i], gymapi.STATE_NONE)
-#     for j in range(franka_num_dofs):
-#         franka_dof_states['pos'][j] = franka_mids[j]
-#     gym.set_actor_dof_states(envs[i], franka_handles[i], franka_dof_states, gymapi.STATE_POS)
+    # Set franka pose so that each joint is in the middle of its actuation range
+    franka_dof_states = gym.get_actor_dof_states(envs[i], franka_handles[i], gymapi.STATE_NONE)
+    for j in range(franka_num_dofs):
+        franka_dof_states['pos'][j] = franka_mids[j]
+    gym.set_actor_dof_states(envs[i], franka_handles[i], franka_dof_states, gymapi.STATE_POS)
 
 # Point camera at environments
 # cam_pos = gymapi.Vec3(-4.0, 4.0, -1.0)
@@ -198,14 +200,14 @@ cam_target = gymapi.Vec3(0.0, 0.0, 0.0)
 gym.viewer_camera_look_at(viewer, None, cam_pos, cam_target)
 
 # Time to wait in seconds before moving robot
-next_franka_update_time = 1.5
+next_franka_update_time = 0.5
 
 while not gym.query_viewer_has_closed(viewer):
     # Every 0.01 seconds the pose of the attactor is updated
     t = gym.get_sim_time(sim)
-    # if t >= next_franka_update_time:
-    #     update_franka(t)
-    #     next_franka_update_time += 0.01
+    if t >= next_franka_update_time:
+        update_franka(t)
+        next_franka_update_time += 0.01
 
     # Step the physics
     gym.simulate(sim)
